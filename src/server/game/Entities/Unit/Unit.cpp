@@ -13736,6 +13736,11 @@ void Unit::ModSpellCastTime(SpellInfo const* spellInfo, int32 & castTime, Spell*
         else if (spellInfo->SpellVisual[0] == 3881 && HasAura(67556)) // cooking with Chef Hat.
             castTime = 500;
         break;
+
+		// Instant Glyph
+		if (spellInfo->Effects[0].Effect == SPELL_EFFECT_ENCHANT_ITEM || spellInfo->Effects[0].Effect == SPELL_EFFECT_APPLY_GLYPH || spellInfo->Effects[0].Effect == SPELL_EFFECT_ENCHANT_ITEM_PRISMATIC)
+			castTime = 1;
+
     case SPELL_DAMAGE_CLASS_MELEE:
         break; // no known cases
     case SPELL_DAMAGE_CLASS_MAGIC:
