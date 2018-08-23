@@ -58,7 +58,7 @@
 #include "ElunaEventMgr.h"
 #endif
 
-#include <math.h>
+#include "../../modules/mod-spellregulator-master/src/SpellRegulator.h"
 
 float baseMoveSpeed[MAX_MOVE_TYPE] =
 {
@@ -689,6 +689,9 @@ uint32 Unit::DealDamage(Unit* attacker, Unit* victim, uint32 damage, CleanDamage
 
     // Hook for OnDamage Event
     sScriptMgr->OnDamage(attacker, victim, damage);
+
+	if ((damagetype == SPELL_DIRECT_DAMAGE || damagetype == DOT) && spellProto)
+		sSpellRegulator->Regulate(damage, spellProto->Id);
 
     if (victim->GetTypeId() == TYPEID_PLAYER && attacker != victim)
     {
@@ -5558,7 +5561,7 @@ void Unit::SendSpellNonMeleeReflectLog(SpellNonMeleeDamage* log, Unit* attacker)
     if (GetTypeId() != TYPEID_PLAYER)
         return;
 
-    WorldPacket data(SMSG_SPELLNONMELEEDAMAGELOG, (16+4+4+4+1+4+4+1+1+4+4+1)); // we guess size
+	WorldPacket data(SMSG_SPELLNONMELEEDAMAGELOG, (16 + 4 + 4 + 4 + 1 + 4 + 4 + 1 + 1 + 4 + 4 + 1)); // we guess size
     data.append(log->target->GetPackGUID());
     data.append(attacker->GetPackGUID());
     data << uint32(log->SpellID);
@@ -5578,6 +5581,7 @@ void Unit::SendSpellNonMeleeReflectLog(SpellNonMeleeDamage* log, Unit* attacker)
 
 void Unit::SendSpellNonMeleeDamageLog(SpellNonMeleeDamage* log)
 {
+	sSpellRegulator->Regulate(log->damage, log->SpellID);
     WorldPacket data(SMSG_SPELLNONMELEEDAMAGELOG, (16+4+4+4+1+4+4+1+1+4+4+1)); // we guess size
     data.append(log->target->GetPackGUID());
     data.append(log->attacker->GetPackGUID());
@@ -5625,6 +5629,7 @@ void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo* pInfo)
 {
     AuraEffect const* aura = pInfo->auraEff;
 
+	sSpellRegulator->Regulate(pInfo->damage, aura->GetId());
     WorldPacket data(SMSG_PERIODICAURALOG, 30);
     data.append(GetPackGUID());
     data.appendPackGUID(aura->GetCasterGUID());
